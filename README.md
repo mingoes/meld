@@ -2,12 +2,13 @@
 
 > Enhance your git commits with AI-powered commit messages!
 
-`git-meld` is a CLI tool that uses OpenAI to analyze your changes and generate meaningful, detailed commit messages. It's like having a helpful co-pilot for your git commits! 🚀
+`git-meld` is a CLI tool that uses AI to analyze your changes and generate meaningful, detailed commit messages. It's like having a helpful co-pilot for your git commits! 🚀
 
 ## ✨ Features
 
-- 🤖 Uses OpenAI to analyze your git diff and generate detailed commit messages
-- 🔒 Securely stores your API key in your system's keychain
+- 🤖 Uses AI to analyze your git diff and generate detailed commit messages
+- 🔄 Supports both OpenAI and OpenRouter as AI providers
+- 🔒 Securely stores your API keys in your system's keychain
 - 🎯 Considers both staged changes and git status
 - 😊 Adds relevant emojis to make your commits more expressive
 - 🚀 Simple to use - just replace `git commit` with `meld`
@@ -20,11 +21,14 @@ npm install -g git-meld
 
 ## 🛠️ First Time Setup
 
-On first run, git-meld will prompt you for your OpenAI API key. You can get one from [OpenAI Platform](https://platform.openai.com/api-keys).
+On first run, git-meld will ask you to choose an AI provider:
+
+1. OpenAI (get your API key from [OpenAI Platform](https://platform.openai.com/api-keys))
+2. OpenRouter (get your API key from [OpenRouter](https://openrouter.ai/keys))
 
 ```bash
 meld
-# Follow the prompts to enter your API key
+# Follow the prompts to select provider and enter your API key
 ```
 
 Your API key will be stored securely in your system's keychain.
@@ -49,7 +53,7 @@ The tool will analyze your changes and generate a detailed, meaningful commit me
 
 - `meld "your message"` - Create an enhanced commit message
 - `meld --help` - Show help information
-- `meld --reset-key` - Reset the stored API key
+- `meld --reset-key` - Reset the stored API key and provider choice
 
 ## 📝 Example
 
@@ -71,7 +75,7 @@ $ meld "add user auth"
 
 ## 🔑 Security
 
-Your OpenAI API key is stored securely in your system's keychain, not in plain text files.
+Your API keys are stored securely in your system's keychain, not in plain text files.
 
 ## 📄 License
 
@@ -79,4 +83,4 @@ MIT © 2024
 
 ## 🐛 Issues
 
-Found a bug? Please [open an issue](https://github.com/yourusername/git-meld/issues)!
+Found a bug? Please [open an issue](https://github.com/mingoes/meld/issues)!

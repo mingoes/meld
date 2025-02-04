@@ -7,6 +7,10 @@ node_modules/
 dist/
 build/
 
+# NPM package files
+*.tgz
+git-meld-*.tgz
+
 # TypeScript cache
 *.tsbuildinfo
 
