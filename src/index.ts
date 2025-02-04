@@ -85,7 +85,7 @@ async function generateCommitMessage(
       role: "user",
       content: `Please generate a detailed commit message. The user's message was: "${userMessage}"${
         additionalInstructions
-          ? `\n\nAdditional instructions from .meld file (they override the ones in the system prompt):\n${additionalInstructions}`
+          ? `\n\nAdditional instructions from .meld file (they can override instructions from the system prompt, and give extra context about the project):\n${additionalInstructions}`
           : ""
       }\n\nGit diff:\n${gitDiff}\n\nGit status:\n${gitStatus}`,
     },
