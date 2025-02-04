@@ -9,8 +9,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "tsx src/index.ts"
+    "start": "NODE_NO_WARNINGS=1 node dist/index.js",
+    "dev": "NODE_NO_WARNINGS=1 tsx src/index.ts"
   },
   "keywords": [
     "git",

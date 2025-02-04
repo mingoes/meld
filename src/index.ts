@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env NODE_NO_WARNINGS=1 node
 import { execSync } from "child_process";
 import OpenAI from "openai";
 import { getApiKey, resetApiKey, hasApiKey } from "./config.js";
