@@ -43,7 +43,7 @@ async function main() {
         },
         {
           role: "user",
-          content: `Please generate a detailed commit message. Keep the tone light, add an emoji here and there. The user's message was: "${userMessage}"\n\nGit diff:\n${gitDiff}\n\nGit status:\n${gitStatus}`,
+          content: `Please generate a detailed commit message. Keep the tone light. The user's commit message was: "${userMessage}"\n\nGit diff:\n${gitDiff}\n\nGit status:\n${gitStatus}`,
         },
       ],
     });
