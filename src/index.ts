@@ -34,7 +34,7 @@ async function main() {
     }
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "o3-mini",
       messages: [
         {
           role: "system",
