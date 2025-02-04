@@ -1,0 +1,33 @@
+{
+  "name": "git-meld",
+  "version": "0.1.0",
+  "description": "CLI tool to generate meaningful commit messages using AI",
+  "main": "dist/index.js",
+  "bin": {
+    "meld": "./dist/index.js"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "keywords": [
+    "git",
+    "commit",
+    "ai",
+    "openai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "dotenv": "^16.4.7",
+    "openai": "^4.82.0",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "conf": "^13.1.0",
+    "keytar": "^7.9.0"
+  }
+}
