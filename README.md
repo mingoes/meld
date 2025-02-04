@@ -12,6 +12,7 @@
 - 😊 Adds relevant emojis to make your commits more expressive
 - 🔒 Securely stores your API key in your system's keychain
 - 🚀 Simple to use - just replace `git commit` with `meld`
+- 📝 Support for custom commit guidelines via `.meld` file
 
 ## 📦 Installation
 
@@ -99,3 +100,17 @@ MIT © 2024
 ## 🐛 Issues
 
 Found a bug? Please [open an issue](https://github.com/mingoes/meld/issues)!
+
+### Custom Commit Guidelines
+
+You can create a `.meld` file in your repository root to provide additional instructions for commit message generation. These instructions will be included every time a commit message is generated.
+
+Example `.meld` file:
+
+```
+Follow conventional commits format (feat, fix, docs, etc)
+Include ticket number from Jira (e.g., PROJ-123)
+Keep subject line under 72 characters
+```
+
+The contents of this file will be added to the AI prompt, helping to maintain consistent commit message style across your project.

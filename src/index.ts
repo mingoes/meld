@@ -9,6 +9,7 @@ import {
   listModels,
 } from "./config.js";
 import { createInterface } from "readline";
+import { readFileSync } from "fs";
 
 // OpenRouter types
 type OpenRouterMessage = {
@@ -66,6 +67,14 @@ async function generateCommitMessage(
   gitDiff: string,
   gitStatus: string
 ): Promise<string> {
+  // Check for .meld file
+  let additionalInstructions = "";
+  try {
+    additionalInstructions = readFileSync(".meld", "utf8").trim();
+  } catch (error) {
+    // File doesn't exist or can't be read, continue without it
+  }
+
   const messages = [
     {
       role: "system",
@@ -74,7 +83,11 @@ async function generateCommitMessage(
     },
     {
       role: "user",
-      content: `Please generate a detailed commit message. The user's message was: "${userMessage}"\n\nGit diff:\n${gitDiff}\n\nGit status:\n${gitStatus}`,
+      content: `Please generate a detailed commit message. The user's message was: "${userMessage}"${
+        additionalInstructions
+          ? `\n\nAdditional instructions from .meld file (they override the ones in the system prompt):\n${additionalInstructions}`
+          : ""
+      }\n\nGit diff:\n${gitDiff}\n\nGit status:\n${gitStatus}`,
     },
   ];
 
