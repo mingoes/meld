@@ -39,11 +39,11 @@ async function main() {
         {
           role: "system",
           content:
-            "You are a helpful assistant that generates detailed git commit messages. Include relevant details from the diff, and add appropriate emojis when relevant. Keep the message concise but informative.",
+            "You are a helpful assistant that generates detailed git commit messages. Include relevant details from the diff, and add appropriate emojis when relevant. Keep the message concise but informative. Respond ONLY with a commmit message.",
         },
         {
           role: "user",
-          content: `Please generate a detailed commit message. Keep the tone light. The user's commit message was: "${userMessage}"\n\nGit diff:\n${gitDiff}\n\nGit status:\n${gitStatus}`,
+          content: `Please generate a brief but detailed commit message. The user's commit message was: "${userMessage}"\n\nGit diff:\n${gitDiff}\n\nGit status:\n${gitStatus}`,
         },
       ],
     });
