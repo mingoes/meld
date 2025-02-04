@@ -17,7 +17,7 @@
     "git",
     "commit",
     "ai",
-    "openai",
+    "openrouter",
     "cli",
     "git-commit",
     "commit-message",
@@ -46,7 +46,6 @@
   },
   "dependencies": {
     "conf": "^13.1.0",
-    "keytar": "^7.9.0",
-    "openai": "^4.82.0"
+    "keytar": "^7.9.0"
   }
 }

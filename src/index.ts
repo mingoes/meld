@@ -1,8 +1,14 @@
 #!/usr/bin/env NODE_NO_WARNINGS=1 node
 import { execSync } from "child_process";
-import OpenAI from "openai";
-import { getApiKey, resetApiKey, hasApiKey } from "./config.js";
-import { ChatCompletionMessage } from "openai/resources/index.mjs";
+import {
+  getApiKey,
+  resetApiKey,
+  hasApiKey,
+  getModel,
+  setModel,
+  listModels,
+} from "./config.js";
+import { createInterface } from "readline";
 
 // OpenRouter types
 type OpenRouterMessage = {
@@ -19,6 +25,20 @@ type OpenRouterRequest = {
   stream?: boolean;
 };
 
+const question = (prompt: string): Promise<string> => {
+  const rl = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    rl.question(prompt, (answer) => {
+      rl.close();
+      resolve(answer);
+    });
+  });
+};
+
 const showHelp = () => {
   console.log(`
 🔄 git-meld - AI-powered commit messages
@@ -26,19 +46,21 @@ const showHelp = () => {
 Usage:
   meld "your commit message"     Create an enhanced commit message
   meld --dry "your message"     Preview the commit message without committing
-  meld --reset-key              Reset the stored API key and provider choice
+  meld --choose-model           Select an AI model from available models
+  meld --set-model "model-id"   Set model ID directly (e.g., "anthropic/claude-2")
+  meld --reset-key              Reset the stored API key and model choice
   meld --help                   Show this help message
 
 Examples:
   meld "fix login bug"
   meld --dry "add user profile"
+  meld --set-model "anthropic/claude-2"
   
 Note: Make sure to stage your changes with 'git add' first!
 `);
 };
 
 async function generateCommitMessage(
-  provider: string,
   apiKey: string,
   userMessage: string,
   gitDiff: string,
@@ -57,57 +79,80 @@ async function generateCommitMessage(
   ];
 
   try {
-    if (provider === "openai") {
-      const openai = new OpenAI({ apiKey });
-      const completion = await openai.chat.completions.create({
-        model: "o3-mini",
-        messages: messages as ChatCompletionMessage[],
-      });
-
-      if (!completion.choices?.[0]?.message?.content) {
-        throw new Error("No response from OpenAI");
+    const model = await getModel();
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://github.com/mingoes/meld",
+          "X-Title": "git-meld",
+        },
+        body: JSON.stringify({
+          model,
+          messages: messages as OpenRouterMessage[],
+        } as OpenRouterRequest),
       }
+    );
 
-      return completion.choices[0].message.content;
-    } else {
-      // OpenRouter
-      const response = await fetch(
-        "https://openrouter.ai/api/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/mingoes/meld",
-            "X-Title": "git-meld",
-          },
-          body: JSON.stringify({
-            model: "openai/o1-mini-2024-09-12",
-            messages: messages as OpenRouterMessage[],
-          } as OpenRouterRequest),
-        }
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(
+        `OpenRouter error: ${
+          error.message || error.error?.message || "Unknown error"
+        }`
       );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(
-          `OpenRouter error: ${
-            error.message || error.error?.message || "Unknown error"
-          }`
-        );
-      }
-
-      const data = await response.json();
-
-      if (!data.choices?.[0]?.message?.content) {
-        throw new Error("No response from OpenRouter");
-      }
-
-      return data.choices[0].message.content;
     }
+
+    const data = await response.json();
+
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error("No response from OpenRouter");
+    }
+
+    return data.choices[0].message.content;
   } catch (error) {
     throw new Error(
       `Failed to generate commit message: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+  }
+}
+
+async function chooseModel(): Promise<void> {
+  const apiKey = await getApiKey();
+  console.log("📋 Fetching available models...");
+
+  try {
+    const modelsData = await listModels(apiKey);
+    const models = modelsData.data;
+
+    console.log("\nAvailable models:");
+    models.forEach((model: any, index: number) => {
+      console.log(`${index + 1}. ${model.name} (${model.id})`);
+    });
+    console.log();
+
+    const choice = await question(
+      "Enter the number of the model you want to use: "
+    );
+    const selectedIndex = parseInt(choice) - 1;
+
+    if (selectedIndex >= 0 && selectedIndex < models.length) {
+      const selectedModel = models[selectedIndex];
+      await setModel(selectedModel.id);
+      console.log(
+        `✨ Model set to: ${selectedModel.name} (${selectedModel.id})`
+      );
+    } else {
+      throw new Error("Invalid model selection");
+    }
+  } catch (error) {
+    throw new Error(
+      `Failed to choose model: ${
         error instanceof Error ? error.message : "Unknown error"
       }`
     );
@@ -129,23 +174,71 @@ async function main() {
     process.exit(0);
   }
 
+  if (command === "--choose-model") {
+    await chooseModel();
+    process.exit(0);
+  }
+
+  if (command === "--set-model") {
+    const modelId = args[1];
+    if (!modelId) {
+      console.error("❌ Please provide a model ID");
+      console.log('Example: meld --set-model "anthropic/claude-2"');
+      process.exit(1);
+    }
+
+    try {
+      const apiKey = await getApiKey();
+      const modelsData = await listModels(apiKey);
+      const models = modelsData.data;
+      const modelExists = models.some((model: any) => model.id === modelId);
+
+      if (!modelExists) {
+        console.log(
+          "⚠️  Warning: The provided model ID was not found in the available models."
+        );
+        console.log("You can view available models with: meld --choose-model");
+        const proceed = await question(
+          "Do you want to set this model anyway? (y/N): "
+        );
+        if (proceed.toLowerCase() !== "y") {
+          process.exit(0);
+        }
+      }
+
+      await setModel(modelId);
+      console.log(`✨ Model set to: ${modelId}`);
+      process.exit(0);
+    } catch (error) {
+      console.error(
+        "❌ Failed to set model:",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+      process.exit(1);
+    }
+  }
+
   // No arguments provided
   if (!command) {
     if (await hasApiKey()) {
       showHelp();
     } else {
       console.log(
-        "👋 Welcome to git-meld! Let's set up your AI provider first."
+        "👋 Welcome to git-meld! Let's set up your OpenRouter API key."
       );
       await getApiKey();
-      console.log("\nGreat! Now you can use git-meld. Try:");
+      console.log("\n✨ Using default model: openai/o1-mini-2024-09-12");
+      console.log("You can change the model anytime with:");
+      console.log("  meld --choose-model    (interactive selection)");
+      console.log('  meld --set-model "model-id"');
+      console.log("\nTry creating your first commit:");
       console.log('meld "your commit message"');
     }
     process.exit(0);
   }
 
   try {
-    const { provider, apiKey } = await getApiKey();
+    const apiKey = await getApiKey();
     const userMessage = isDryRun ? args.slice(1).join(" ") : args.join(" ");
 
     if (!userMessage) {
@@ -165,7 +258,6 @@ async function main() {
     }
 
     const commitMessage = await generateCommitMessage(
-      provider,
       apiKey,
       userMessage,
       gitDiff,
