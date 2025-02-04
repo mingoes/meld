@@ -53,6 +53,7 @@ async function main() {
     if (commitMessage) {
       execSync(`git commit -m "${commitMessage.replace(/"/g, '\\"')}"`);
       console.log("✨ Commit created successfully!");
+      process.exit(0);
     }
   } catch (error) {
     console.error(
