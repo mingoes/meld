@@ -11,7 +11,10 @@ const rl = createInterface({
 
 const question = (prompt: string): Promise<string> => {
   return new Promise((resolve) => {
-    rl.question(prompt, resolve);
+    rl.question(prompt, (answer) => {
+      rl.close();
+      resolve(answer);
+    });
   });
 };
 
