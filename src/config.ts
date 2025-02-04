@@ -18,6 +18,11 @@ const question = (prompt: string): Promise<string> => {
   });
 };
 
+export async function hasApiKey(): Promise<boolean> {
+  const apiKey = await keytar.getPassword(SERVICE_NAME, ACCOUNT_NAME);
+  return !!apiKey;
+}
+
 export async function getApiKey(): Promise<string> {
   // Try to get the API key from the system keychain
   let apiKey = await keytar.getPassword(SERVICE_NAME, ACCOUNT_NAME);

@@ -1,14 +1,51 @@
 #!/usr/bin/env node
 import { execSync } from "child_process";
 import OpenAI from "openai";
-import { getApiKey, resetApiKey } from "./config.js";
+import { getApiKey, resetApiKey, hasApiKey } from "./config.js";
+
+const showHelp = () => {
+  console.log(`
+🔄 git-meld - AI-powered commit messages
+
+Usage:
+  meld "your commit message"     Create an enhanced commit message
+  meld --reset-key              Reset the stored API key
+  meld --help                   Show this help message
+
+Examples:
+  meld "fix login bug"
+  meld "add user profile"
+  
+Note: Make sure to stage your changes with 'git add' first!
+`);
+};
 
 async function main() {
   const command = process.argv[2];
 
+  if (command === "--help") {
+    showHelp();
+    process.exit(0);
+  }
+
   if (command === "--reset-key") {
     await resetApiKey();
-    return;
+    process.exit(0);
+  }
+
+  // No arguments provided
+  if (!command) {
+    if (await hasApiKey()) {
+      showHelp();
+    } else {
+      console.log(
+        "👋 Welcome to git-meld! Let's set up your OpenAI API key first."
+      );
+      await getApiKey();
+      console.log("\nGreat! Now you can use git-meld. Try:");
+      console.log('meld "your commit message"');
+    }
+    process.exit(0);
   }
 
   try {
