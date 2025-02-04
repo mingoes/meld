@@ -7,10 +7,10 @@
 ## ✨ Features
 
 - 🤖 Uses AI to analyze your git diff and generate detailed commit messages
-- 🔄 Supports both OpenAI and OpenRouter as AI providers
-- 🔒 Securely stores your API keys in your system's keychain
+- 🔄 Powered by OpenRouter - access to multiple AI models
 - 🎯 Considers both staged changes and git status
 - 😊 Adds relevant emojis to make your commits more expressive
+- 🔒 Securely stores your API key in your system's keychain
 - 🚀 Simple to use - just replace `git commit` with `meld`
 
 ## 📦 Installation
@@ -21,17 +21,17 @@ npm install -g git-meld
 
 ## 🛠️ First Time Setup
 
-On first run, git-meld will ask you to choose an AI provider:
-
-1. OpenAI (get your API key from [OpenAI Platform](https://platform.openai.com/api-keys))
-2. OpenRouter (get your API key from [OpenRouter](https://openrouter.ai/keys))
+On first run, git-meld will ask for your OpenRouter API key:
 
 ```bash
 meld
-# Follow the prompts to select provider and enter your API key
+# Follow the prompt to enter your OpenRouter API key
 ```
 
+Get your API key from [OpenRouter](https://openrouter.ai/keys).
 Your API key will be stored securely in your system's keychain.
+
+By default, git-meld uses the `openai/o1-mini-2024-09-12` model, but you can easily switch to any other model available on OpenRouter.
 
 ## 💡 Usage
 
@@ -52,8 +52,23 @@ The tool will analyze your changes and generate a detailed, meaningful commit me
 ### Commands
 
 - `meld "your message"` - Create an enhanced commit message
+- `meld --dry "message"` - Preview the commit message without committing
+- `meld --choose-model` - Select an AI model from available models
+- `meld --set-model "model-id"` - Set model ID directly (e.g., "anthropic/claude-2")
+- `meld --reset-key` - Reset the stored API key and model choice
 - `meld --help` - Show help information
-- `meld --reset-key` - Reset the stored API key and provider choice
+
+### Choosing a Model
+
+You can choose from any model available on OpenRouter:
+
+```bash
+# Interactive model selection
+meld --choose-model
+
+# Direct model setting
+meld --set-model "anthropic/claude-2"
+```
 
 ## 📝 Example
 
@@ -75,7 +90,7 @@ $ meld "add user auth"
 
 ## 🔑 Security
 
-Your API keys are stored securely in your system's keychain, not in plain text files.
+Your API key is stored securely in your system's keychain, not in plain text files.
 
 ## 📄 License
 
