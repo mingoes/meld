@@ -64,8 +64,7 @@ Note: Make sure to stage your changes with 'git add' first!
 async function generateCommitMessage(
   apiKey: string,
   userMessage: string,
-  gitDiff: string,
-  gitStatus: string
+  gitDiff: string
 ): Promise<string> {
   // Check for .meld file
   let additionalInstructions = "";
@@ -87,7 +86,7 @@ async function generateCommitMessage(
         additionalInstructions
           ? `\n\nAdditional instructions from .meld file (they can override instructions from the system prompt, and give extra context about the project):\n${additionalInstructions}`
           : ""
-      }\n\nGit diff:\n${gitDiff}\n\nGit status:\n${gitStatus}`,
+      }\n\n# Git diff:\n${gitDiff}`,
     },
   ];
 
@@ -260,10 +259,9 @@ async function main() {
     }
 
     // Get git diff and status
-    const gitDiff = execSync("git diff").toString();
-    const gitStatus = execSync("git status --porcelain").toString();
+    const gitDiff = execSync("git diff --staged --unified=20").toString();
 
-    if (!gitDiff && !gitStatus) {
+    if (!gitDiff) {
       console.error(
         "❌ No staged changes found. Use git add to stage your changes."
       );
@@ -273,8 +271,7 @@ async function main() {
     const commitMessage = await generateCommitMessage(
       apiKey,
       userMessage,
-      gitDiff,
-      gitStatus
+      gitDiff
     );
 
     if (commitMessage) {
