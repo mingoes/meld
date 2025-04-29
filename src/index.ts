@@ -10,6 +10,8 @@ import {
 } from "./config.js";
 import { createInterface } from "readline";
 import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 
 // OpenRouter types
 type OpenRouterMessage = {
@@ -50,12 +52,15 @@ Usage:
   meld --choose-model           Select an AI model from available models
   meld --set-model "model-id"   Set model ID directly (e.g., "anthropic/claude-2")
   meld --reset-key              Reset the stored API key and model choice
+  meld melt <commit>            Squash all commits down to <commit> and generate a summarized commit message
+  meld --version                Show the current version
   meld --help                   Show this help message
 
 Examples:
   meld "fix login bug"
   meld --dry "add user profile"
   meld --set-model "anthropic/claude-2"
+  meld melt 1234abcd
   
 Note: Make sure to stage your changes with 'git add' first!
 `);
@@ -176,6 +181,20 @@ async function main() {
   const isDryRun = args[0] === "--dry";
   const command = isDryRun ? args[1] : args[0];
 
+  // Handle --version before any staged changes or commit message checks
+  if (args.includes("--version")) {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const pkgPath = join(__dirname, "..", "package.json");
+    try {
+      const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+      console.log(`git-meld version ${pkg.version}`);
+    } catch (e) {
+      console.error("Could not read version info.");
+    }
+    process.exit(0);
+  }
+
   if (command === "--help") {
     showHelp();
     process.exit(0);
@@ -224,6 +243,69 @@ async function main() {
     } catch (error) {
       console.error(
         "❌ Failed to set model:",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+      process.exit(1);
+    }
+  }
+
+  if (command === "melt") {
+    const commitNumber = args[1];
+    if (!commitNumber) {
+      console.error("❌ Please provide a commit hash or number");
+      console.log("Example: meld melt <commit-hash-or-number>");
+      process.exit(1);
+    }
+
+    try {
+      const apiKey = await getApiKey();
+      // 1. Get the parent of the given commit
+      const parentCommit = execSync(`git rev-parse ${commitNumber}^`)
+        .toString()
+        .trim();
+      // 2. Get all commit messages from <parentCommit> (exclusive) to HEAD (inclusive of <commitNumber>)
+      const logRange = `${parentCommit}..HEAD`;
+      const commitMessages = execSync(
+        `git log --format=%B --reverse ${logRange}`
+      )
+        .toString()
+        .trim();
+      // 3. Get the combined diff for the same range
+      const gitDiff = execSync(
+        `git diff --unified=20 ${parentCommit}`
+      ).toString();
+      if (!gitDiff) {
+        console.error("❌ No changes found to squash.");
+        process.exit(1);
+      }
+      // 4. Confirm with user
+      console.log(
+        "⚠️  This will squash all commits down to and including:",
+        commitNumber
+      );
+      const proceed = await question("Continue? (y/N): ");
+      if (proceed.toLowerCase() !== "y") {
+        process.exit(0);
+      }
+      // 5. Perform a soft reset to the parent of the target commit
+      execSync(`git reset --soft ${parentCommit}`);
+      // 6. Generate a summary commit message
+      const userMessage = `Squash summary for commits after ${parentCommit} (including ${commitNumber}).\n\nCommits:\n${commitMessages}`;
+      const commitMessage = await generateCommitMessage(
+        apiKey,
+        userMessage,
+        gitDiff
+      );
+      // 7. Create a new squashed commit
+      execSync(`git commit -F -`, {
+        input: commitMessage,
+        stdio: ["pipe", "inherit", "inherit"],
+      });
+      console.log("✨ Squashed and summarized commit created!");
+      process.exit(0);
+    } catch (error) {
+      console.error(
+        "❌ Error during melt:",
         error instanceof Error ? error.message : "Unknown error"
       );
       process.exit(1);
