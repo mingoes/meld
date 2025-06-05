@@ -53,10 +53,13 @@ The tool will analyze your changes and generate a detailed, meaningful commit me
 ### Commands
 
 - `meld "your message"` - Create an enhanced commit message
-- `meld --dry "message"` - Preview the commit message without committing
+- `meld --dry "your message"` - Preview the commit message without committing
 - `meld --choose-model` - Select an AI model from available models
+- `meld --get-model` - Show the currently selected model
 - `meld --set-model "model-id"` - Set model ID directly (e.g., "anthropic/claude-2")
 - `meld --reset-key` - Reset the stored API key and model choice
+- `meld melt <commit>` - Squash all commits down to `<commit>` and generate a summarized commit message
+- `meld --version` - Show the current version
 - `meld --help` - Show help information
 
 ### Choosing a Model
