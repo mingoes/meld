@@ -22,6 +22,7 @@ Usage:
   meld "your commit message"     Create an enhanced commit message
   meld --dry "your message"     Preview the commit message without committing
   meld --choose-model           Select an AI model from available models
+  meld --get-model              Show the currently selected model
   meld --set-model "model-id"   Set model ID directly (e.g., "anthropic/claude-2")
   meld --reset-key              Reset the stored API key and model choice
   meld melt <commit>            Squash all commits down to <commit> and generate a summarized commit message

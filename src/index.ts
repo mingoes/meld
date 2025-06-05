@@ -4,6 +4,7 @@ import {
   getApiKey,
   resetApiKey,
   hasApiKey,
+  getModel,
   setModel,
   listModels,
 } from "./config.js";
@@ -46,6 +47,12 @@ async function main() {
 
     if (command === "--choose-model") {
       await chooseModel();
+      return;
+    }
+
+    if (command === "--get-model") {
+      const model = await getModel();
+      console.log(`Current model: ${model}`);
       return;
     }
 
