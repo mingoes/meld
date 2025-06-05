@@ -15,6 +15,38 @@ import { question, showHelp } from "./ui.js";
 import { chooseModel, generateCommitMessage } from "./openrouter.js";
 import { meltCommand } from "./commands.js";
 
+async function handleCommit(userMessage: string, isDryRun: boolean) {
+  const apiKey = await getApiKey();
+  const gitDiff = execSync("git diff --staged --unified=20").toString();
+
+  if (!gitDiff) {
+    throw new Error(
+      "No staged changes found. Use git add to stage your changes."
+    );
+  }
+
+  const commitMessage = await generateCommitMessage(
+    apiKey,
+    userMessage,
+    gitDiff
+  );
+
+  if (commitMessage) {
+    if (isDryRun) {
+      console.log("\n📝 Generated commit message (dry run):\n");
+      console.log(commitMessage);
+    } else {
+      execSync(`git commit -F -`, {
+        input: commitMessage,
+        stdio: ["pipe", "inherit", "inherit"],
+      });
+      console.log("✨ Commit created successfully!");
+      console.log("\n📝 Commit message used:\n");
+      console.log(commitMessage);
+    }
+  }
+}
+
 async function main() {
   try {
     const args = process.argv.slice(2);
@@ -96,7 +128,10 @@ async function main() {
     // No command, or a message for commit
     if (!command) {
       if (await hasApiKey()) {
-        showHelp();
+        const userMessage = await question(
+          "Provide an optional description of your changes (press Enter to skip): "
+        );
+        await handleCommit(userMessage, isDryRun);
       } else {
         console.log(
           "👋 Welcome to git-meld! Let's set up your OpenRouter API key."
@@ -113,7 +148,6 @@ async function main() {
     }
 
     // This is a commit message
-    const apiKey = await getApiKey();
     const userMessage = filteredArgs.join(" ");
 
     if (!userMessage) {
@@ -122,36 +156,7 @@ async function main() {
       process.exit(1);
     }
 
-    // Get git diff and status
-    const gitDiff = execSync("git diff --staged --unified=20").toString();
-
-    if (!gitDiff) {
-      console.error(
-        "❌ No staged changes found. Use git add to stage your changes."
-      );
-      process.exit(1);
-    }
-
-    const commitMessage = await generateCommitMessage(
-      apiKey,
-      userMessage,
-      gitDiff
-    );
-
-    if (commitMessage) {
-      if (isDryRun) {
-        console.log("\n📝 Generated commit message (dry run):\n");
-        console.log(commitMessage);
-      } else {
-        execSync(`git commit -F -`, {
-          input: commitMessage,
-          stdio: ["pipe", "inherit", "inherit"],
-        });
-        console.log("✨ Commit created successfully!");
-        console.log("\n📝 Commit message used:\n");
-        console.log(commitMessage);
-      }
-    }
+    await handleCommit(userMessage, isDryRun);
   } catch (error) {
     console.error(
       "❌ Error:",
